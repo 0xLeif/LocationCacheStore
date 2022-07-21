@@ -15,7 +15,13 @@ public enum LocationStoreAction {
 
 /// `LocationStore` Dependency
 public struct LocationStoreDependency {
-    var updateLocation: () async -> CLLocation?
+    public var updateLocation: () async -> CLLocation?
+    
+    public init(
+        updateLocation: @escaping () async -> CLLocation?
+    ) {
+        self.updateLocation = updateLocation
+    }
 }
 
 public extension LocationStoreDependency {
