@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/0xOpenBytes/CacheStore",
       "state" : {
-        "revision" : "01694ce49f90aff3c9b4970d46c247297e01c2eb",
-        "version" : "3.2.0"
+        "revision" : "8f5c287dfaba3dcf2cd2921bf48f38c3a0359423",
+        "version" : "3.2.2"
       }
     },
     {

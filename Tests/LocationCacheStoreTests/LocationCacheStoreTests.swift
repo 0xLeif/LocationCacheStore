@@ -8,58 +8,27 @@ final class LocationCacheStoreTests: XCTestCase {
     func testExample() throws {
         let initLocation = CLLocation()
         
-        let locationStore = LocationStore(
-            initialValues: [:],
-            actionHandler: locationStoreActionHandler(),
-            dependency: .mock(location: initLocation)
-        )
-        
-        enum ExampleKey {
-            case location
-        }
-        
-        struct ExampleStoreContent: StoreContent {
-            var store: Store<ExampleKey, Void, Void>
-            
-            var location: CLLocation {
-                store.resolve(.location)
-            }
-        }
-        
-        var exampleStore: TestStore<ExampleKey, Void, Void> {
-            TestStore(
-                store: locationStore.actionlessScope(
-                    keyTransformation: (
-                        from: { parent in
-                            switch parent {
-                            case .location: return .location
-                            default: return nil
-                            }
-                        },
-                        to: { child in
-                            switch child {
-                            case .location: return .location
-                            default: return nil
-                            }
-                        }
-                    ),
-                    dependencyTransformation: { _ in () }
+        let store = TestStore(
+            store: LocationStore(
+                initialValues: [:],
+                actionHandler: locationStoreActionHandler(),
+                dependency: LocationStoreDependency(
+                    shouldContinuouslyUpdate: false,
+                    updateLocation: { initLocation }
                 )
             )
-        }
+        )
         
-        // MARK: - Test
-        exampleStore.content { (content: ExampleStoreContent) in
-            try t.assert(content.location.coordinate.latitude, isEqualTo: initLocation.coordinate.latitude)
-            try t.assert(content.location.coordinate.latitude, isEqualTo: initLocation.coordinate.latitude)
+        store.send(.updateLocation, expecting: { _ in })
+        
+        store.receive(.locationUpdated(initLocation)) { cacheStore in
+            cacheStore.set(value: initLocation, forKey: .location)
         }
         
         let newLocation = CLLocation(latitude: 1, longitude: 1)
-        locationStore.handle(action: .locationUpdated(newLocation))
         
-        exampleStore.content { (content: ExampleStoreContent) in
-            try t.assert(content.location.coordinate.latitude, isEqualTo: newLocation.coordinate.latitude)
-            try t.assert(content.location.coordinate.latitude, isEqualTo: newLocation.coordinate.latitude)
+        store.send(.locationUpdated(newLocation)) { cacheStore in
+            cacheStore.set(value: newLocation, forKey: .location)
         }
     }
 }

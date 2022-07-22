@@ -15,11 +15,14 @@ public enum LocationStoreAction {
 
 /// `LocationStore` Dependency
 public struct LocationStoreDependency {
+    public var shouldContinuouslyUpdate: Bool
     public var updateLocation: () async -> CLLocation?
     
     public init(
+        shouldContinuouslyUpdate: Bool = true,
         updateLocation: @escaping () async -> CLLocation?
     ) {
+        self.shouldContinuouslyUpdate = shouldContinuouslyUpdate
         self.updateLocation = updateLocation
     }
 }
@@ -71,18 +74,24 @@ public func locationStoreActionHandler(
         else {
             struct RepeatUpdateLocationActionEffectID: Hashable { }
             
-            return ActionEffect(id: RepeatUpdateLocationActionEffectID()) {
-                sleep(1)
-                return .updateLocation
+            if dependency.shouldContinuouslyUpdate {
+                return ActionEffect(id: RepeatUpdateLocationActionEffectID()) {
+                    sleep(1)
+                    return .updateLocation
+                }
             }
+            
+            return .none
         }
         
         return nextAction
     }
 }
 
+public typealias LocationStore = Store<LocationStoreKey, LocationStoreAction, LocationStoreDependency>
+
 /// LocationStore that updates the user's location
-public class LocationStore: Store<LocationStoreKey, LocationStoreAction, LocationStoreDependency> {
+public class DefaultLocationStore: LocationStore {
     /// Create a LocationStore with an ActionHandler and Dependency
     public init(
         withActionHandler actionHandler: StoreActionHandler<LocationStoreKey, LocationStoreAction, LocationStoreDependency>? = nil,
